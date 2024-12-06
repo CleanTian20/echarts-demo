@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>ECharts 堆叠柱状图示例</title>
+  <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+</head>
+<body>
+  <!-- 图表容器 -->
+  <div id="main" style="width: 100%; height: 600px;"></div>
+  
+  <script>
+    const rawData = [
+      [26535, 28897, 36043, 29371, 30551, 44390, 50783, 31313, 31201, 18191, 22685, 25685, 24680, 28129, 32159, 24797, 36520, 42546, 37782, 6100], // OpenMove
+      [64699, 49017, 67417, 64220, 55092, 80367, 97076, 61436, 54576, 34257, 66442, 45709, 57445, 60138, 82533, 60457, 69649, 100262, 87275, 15721], // OpenRun
+      [41295, 40104, 48663, 40433, 39482, 53321, 68951, 56287, 35225, 25451, 45575, 39013, 38323, 35604, 56319, 29431, 22872, 44021, 43377, 3665], // OpenRun Pro
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 33081, 59906, 63017, 67753, 6937], // OpenRun Pro2
+      [5824, 6223, 6501, 5795, 6169, 8529, 11382, 8695, 8537, 2908, 6103, 4381, 5954, 2988, 4599, 2993, 4028, 6000, 2992, 196], // OpenSwim
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 736, 8679, 18526, 16830, 17003, 21580, 19209, 36120, 3084], // OpenSwim Pro
+      [20000, 30270, 31876, 32123, 33161, 24425, 33593, 31510, 30557, 16555, 23592, 25431, 16809, 15369, 18662, 12087, 16346, 21766, 25928, 2814], // OpenFit
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3800, 30920, 41726, 43552, 25337, 27850, 45307, 36581, 5885], // OpenFit Air
+      [7318, 7249, 10441, 14685, 11172, 7455, 13055, 9488, 15128, 10110, 20388, 9104, 15602, 8126, 14319, 9499, 10157, 13720, 14151, 2854], // ToB
+    ];
+
+    const categories = [
+      '2023-05', '2023-06', '2023-07', '2023-08', '2023-09', '2023-10', 
+      '2023-11', '2023-12', '2024-01', '2024-02', '2024-03', '2024-04', 
+      '2024-05', '2024-06', '2024-07', '2024-08', '2024-09', '2024-10', 
+      '2024-11', '2024-12'
+    ];
+
+    const productNames = [
+      'OpenMove', 'OpenRun', 'OpenRun Pro', 'OpenRun Pro2', 'OpenSwim', 
+      'OpenSwim Pro', 'OpenFit', 'OpenFit Air', 'ToB'
+    ];
+
+    const totalData = [];
+    for (let i = 0; i < rawData[0].length; ++i) {
+      let sum = 0;
+      for (let j = 0; j < rawData.length; ++j) {
+        sum += rawData[j][i];
+      }
+      totalData.push(sum);
+    }
+
+    const series = productNames.map((name, index) => ({
+      name,
+      type: 'bar',
+      stack: 'total',
+      barWidth: '60%',
+      data: rawData[index].map((d, i) => totalData[i] === 0 ? 0 : d / totalData[i])
+    }));
+
+    const option = {
+      color: ['#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de', '#fc8452', '#9a60b4', '#ea7ccc', '#3ba272'],
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: {
+          type: 'shadow'
+        },
+        formatter: (params) => {
+          let content = `${params[0].axisValue}<br>`;
+          params.forEach((p) => {
+            content += `${p.marker} ${p.seriesName}: ${(p.value * 100).toFixed(2)}%<br>`;
+          });
+          return content;
+        }
+      },
+      legend: {
+        data: productNames,
+        top: 10
+      },
+      grid: {
+        left: '3%',
+        right: '4%',
+        bottom: '3%',
+        containLabel: true
+      },
+      xAxis: {
+        type: 'category',
+        data: categories
+      },
+      yAxis: {
+        type: 'value',
+        axisLabel: {
+          formatter: '{value}%'
+        }
+      },
+      series
+    };
+
+    // 初始化图表
+    const chart = echarts.init(document.getElementById('main'));
+    chart.setOption(option);
+  </script>
+</body>
+</html>
