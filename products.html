@@ -51,43 +51,57 @@
       data: rawData[index].map((d, i) => totalData[i] === 0 ? 0 : d / totalData[i])
     }));
 
+    // 计算多边形连接区域
+    const grid = { left: 100, right: 100, top: 50, bottom: 50 };
+    const gridWidth = 800 - grid.left - grid.right; // 假设宽度
+    const gridHeight = 400 - grid.top - grid.bottom; // 假设高度
+    const categoryWidth = gridWidth / rawData[0].length;
+    const barWidth = categoryWidth * 0.6;
+    const barPadding = (categoryWidth - barWidth) / 2;
+    const color = ['#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de', '#fc8452', '#9a60b4', '#ea7ccc', '#3ba272'];
+    const elements = [];
+
+    for (let j = 1; j < rawData[0].length; ++j) {
+      const leftX = grid.left + categoryWidth * (j - 1) + barPadding;
+      const rightX = grid.left + categoryWidth * j - barPadding;
+      let leftY = grid.top + gridHeight;
+      let rightY = grid.top + gridHeight;
+
+      for (let i = 0; i < rawData.length; ++i) {
+        const points = [];
+        const leftBarHeight = (rawData[i][j - 1] / totalData[j - 1]) * gridHeight;
+        const rightBarHeight = (rawData[i][j] / totalData[j]) * gridHeight;
+
+        points.push([leftX, leftY]);
+        points.push([leftX, leftY - leftBarHeight]);
+        points.push([rightX, rightY - rightBarHeight]);
+        points.push([rightX, rightY]);
+        points.push([leftX, leftY]);
+
+        leftY -= leftBarHeight;
+        rightY -= rightBarHeight;
+
+        elements.push({
+          type: 'polygon',
+          shape: { points },
+          style: { fill: color[i], opacity: 0.25 }
+        });
+      }
+    }
+
     const option = {
-      color: ['#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de', '#fc8452', '#9a60b4', '#ea7ccc', '#3ba272'],
-      tooltip: {
-        trigger: 'axis',
-        axisPointer: {
-          type: 'shadow'
-        },
-        formatter: (params) => {
-          let content = `${params[0].axisValue}<br>`;
-          params.forEach((p) => {
-            content += `${p.marker} ${p.seriesName}: ${(p.value * 100).toFixed(2)}%<br>`;
-          });
-          return content;
-        }
-      },
-      legend: {
-        data: productNames,
-        top: 10
-      },
-      grid: {
-        left: '3%',
-        right: '4%',
-        bottom: '3%',
-        containLabel: true
-      },
-      xAxis: {
-        type: 'category',
-        data: categories
-      },
-      yAxis: {
-        type: 'value',
-        axisLabel: {
-          formatter: '{value}%'
-        }
-      },
-      series
+      color,
+      tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+      legend: { data: productNames, top: 10 },
+      grid,
+      xAxis: { type: 'category', data: categories },
+      yAxis: { type: 'value', axisLabel: { formatter: '{value}%' } },
+      series,
+      graphic: { elements }
     };
+
+    const chart = echarts.init(document.getElementById('main'));
+    chart.setOption(option);    
 
     // 初始化图表
     const chart = echarts.init(document.getElementById('main'));
